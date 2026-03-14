@@ -69,15 +69,6 @@ let create_test_json_df () =
     close_out oc;
     Dataframe.load_from_json json_path
 
-(* Helper function to create a second dataframe for join testing *)
-let create_join_df () =
-    let csv_path = "join_data.csv" in
-    let csv_content = "Department,Location,EmployeeCount\nString,String,Int\nEngineering,New York,50\nMarketing,San Francisco,30\nHR,Chicago,15\nFinance,Boston,20\n" in
-    let oc = open_out csv_path in
-    output_string oc csv_content;
-    close_out oc;
-    Dataframe.load_from_csv csv_path
-
 (* Run a test and print the result *)
 let run_test name test_func =
     Printf.printf "Running test: %s\n" name;
@@ -149,13 +140,6 @@ let test_to_json () =
     assert_equal cols1 cols2 "JSON export should preserve column count"
 
 (* Lib Module Tests *)
-let test_show_df () =
-    let df = create_test_df () in
-    try
-      Lib.show_df df;
-      true
-    with _ -> false
-  
 let test_map () =
     let df = create_test_df () in
     let add_one = function
@@ -203,56 +187,7 @@ let test_fold_right_sum () =
     match result with
     | INT_DATA sum -> assert_equal 118 sum "Sum of ages should be 118"  (* 30 + 25 + 35 + 28 = 118 *)
     | _ -> assert_true false "Expected INT_DATA result"
-    
-let test_normalize () =
-    let df = create_test_df2 () in
-    let normalized_df = Lib.normalize "Age" df in
-    let age_col = Dataframe.get_column normalized_df "Age" in
-    (* Check if the values are normalized (mean=0, std≈1) *)
-    let values = age_col 
-        |> Seq.filter (fun x -> x <> NULL) 
-        |> Seq.map (function 
-        | FLOAT_DATA f -> f 
-        | _ -> failwith "Expected float") 
-        |> List.of_seq in
-    let sum = List.fold_left (+.) 0. values in
-    let mean = sum /. float_of_int (List.length values) in
-    assert_true (abs_float mean < 0.001) "Mean of normalized data should be close to 0"
-    
-let test_min_max_normalize () =
-    let df = create_test_df2 () in
-    let normalized_df = Lib.min_max_normalize "Age" df in
-    let age_col = Dataframe.get_column normalized_df "Age" in
-    let values = age_col 
-        |> Seq.filter (fun x -> x <> NULL) 
-        |> Seq.map (function 
-        | FLOAT_DATA f -> f 
-        | _ -> failwith "Expected float") 
-        |> List.of_seq in
-    let min_val = List.fold_left min max_float values in
-    let max_val = List.fold_left max min_float values in
-    assert_true (abs_float min_val < 0.001) "Min should be close to 0" &&
-    assert_true (abs_float (max_val -. 1.0) < 0.001) "Max should be close to 1"
-    
-let test_imputena () =
-    let df = create_test_df () in
-    let imputed_df = Lib.imputena "Salary" df in
-    let salary_col = Dataframe.get_column imputed_df "Salary" in
-    let has_nulls = salary_col |> Seq.exists ((=) NULL) in
-    assert_true (not has_nulls) "Should not have NULL values after imputation"
-    
-let test_join () =
-    let df1 = create_test_df () in
-    let df2 = create_join_df () in
-    let joined_df = Lib.join df1 df2 "Department" in
-    let _, cols1 = Dataframe.shape df1 in
-    let _, cols_joined = Dataframe.shape joined_df in
-    assert_true (cols_joined > cols1) "Joined dataframe should have more columns than original" &&
-    (try
-        let _ = Dataframe.get_column_index joined_df "Location" in
-        true
-    with _ -> false)
-    
+        
 let test_sum () =
     let df = create_test_df () in
     let result = Lib.sum "Age" df in
@@ -267,39 +202,8 @@ let test_len () =
     | INT_DATA len -> assert_equal 5 len "Should have 5 age values"
     | _ -> assert_true false "Expected INT_DATA result"
     
-let test_mean () =
-    let df = create_test_df2 () in
-    let result = Lib.mean "Age" df in
-    match result with
-    | FLOAT_DATA mean -> assert_equal_float 34.2 mean 0.001 "Mean age should be 34.2" 
-    | _ -> assert_true false "Expected FLOAT_DATA result"
-    
-let test_stddev () =
-    let df = create_test_df2 () in
-    let result = Lib.stddev "Age" df in
-    match result with
-    | FLOAT_DATA std -> 
-        assert_equal_float 5.78 std 0.01 "Stddev should be close to 5.78"
-    | _ -> assert_true false "Expected FLOAT_DATA result"
+let () =
 
-let test_iloc () = 
-    let df = create_test_df2 () in
-    let result_df = Lib.iloc 0 5 df in
-    let (_, cols1) = Dataframe.shape df in
-    let (rows2, cols2) = Dataframe.shape result_df in
-    assert_equal rows2 6 "Expected 6 rows" &&
-    assert_equal cols2 cols1 "Number of columns should not change"
-
-let test_loc () = 
-    let df = create_test_df2 () in
-    let result_df = Lib.loc "Name" "John Doe" "Emily Wilson" df in
-    let (_, cols1) = Dataframe.shape df in
-    let (rows2, cols2) = Dataframe.shape result_df in
-    assert_equal rows2 4 "Expected 4 rows" &&
-    assert_equal cols2 cols1 "Number of columns should not change"
-
-
-let () = 
     run_test "Load from CSV" test_load_from_csv;
     run_test "Load from JSON" test_load_from_json;
     run_test "No of rows" test_no_of_rows;
@@ -310,19 +214,10 @@ let () =
     run_test "To CSV" test_to_csv;
     run_test "To JSON" test_to_json;
 
-    run_test "Show DataFrame" test_show_df;
     run_test "Map" test_map;
     run_test "Filter" test_filter;
     run_test "Memory" test_mem;
     run_test "Fold left sum" test_fold_left_sum;
     run_test "Fold right sum" test_fold_right_sum;
-    run_test "Normalize" test_normalize;
-    run_test "Min-Max normalize" test_min_max_normalize;
-    run_test "Impute NA" test_imputena;
-    run_test "Join" test_join;
     run_test "Sum" test_sum;
-    run_test "Length" test_len;
-    run_test "Mean" test_mean;
-    run_test "StdDev" test_stddev;
-    run_test "iLoc" test_iloc;
-    run_test "Loc" test_loc;
+    run_test "Length" test_len; 

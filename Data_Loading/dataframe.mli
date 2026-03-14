@@ -6,9 +6,10 @@ open Utils
 (** Dataframe type and operations *)
 
 type dataframe = {
+  filename: string;
   headers: string list;
   dtypes: datatype list;
-  rows: Row.t Seq.t;
+  rows: unit -> Row.t Seq.t;
   ncols: int;
 }
 
@@ -31,7 +32,7 @@ module Dataframe : sig
   val shape : dataframe -> int * int
 
   (** Load a dataframe from a file *)
-  val load_from_file : string -> string ->dataframe
+  val load_from_file : char -> string ->dataframe
 
   (** Load a dataframe from a CSV file *)
   val load_from_csv : string -> dataframe

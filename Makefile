@@ -6,8 +6,7 @@ OCAMLC = ocamlc
 OCAMLFLAGS = -I $(DATA_LOADING_PATH) \
              -I $(DATA_OPERATIONS_PATH) \
              -I $(DATA_OPERATIONS_PATH)/utils -I $(DATA_OPERATIONS_PATH)/operations \
-             -I $(DATA_OPERATIONS_PATH)/transformations \
-             -I $(BENCHMARK_PATH)
+             -I $(DATA_OPERATIONS_PATH)/transformations 
 
 # File paths (Data Loading)
 DATA_LOADING_UTILS = $(DATA_LOADING_PATH)/utils
@@ -24,7 +23,6 @@ TRANSFORM = $(DATA_OPERATIONS_PATH)/transformations/int_transformations \
 LIB_UTILS = $(DATA_OPERATIONS_PATH)/lib_utils
 LIB = $(DATA_OPERATIONS_PATH)/lib
 MAIN = main
-BENCHMARK = $(BENCHMARK_PATH)/benchmark
 
 # Lists of modules
 MLI_MODULES = \
@@ -52,20 +50,15 @@ CMOS = \
     $(DATA_OPERATIONS_PATH)/lib.cmo
 
 MAIN_OBJ = $(MAIN).cmo
-BENCHMARK_OBJ = $(BENCHMARK).cmo
 
 TARGET = main.exe
-BENCHMARK_TARGET = benchmark.exe
 
 .PHONY: all clean run run-benchmark
 
-all: $(TARGET) $(BENCHMARK_TARGET)
+all: $(TARGET)
 
 $(TARGET): $(CMIS) $(CMOS) $(MAIN_OBJ)
 	$(OCAMLC) $(OCAMLFLAGS) -o $@ $(CMOS) $(MAIN_OBJ)
-
-$(BENCHMARK_TARGET): $(CMIS) $(CMOS) $(BENCHMARK_OBJ)
-	$(OCAMLC) $(OCAMLFLAGS) unix.cma -o $@ $(CMOS) $(BENCHMARK_OBJ)
 
 %.cmi: %.mli
 	$(OCAMLC) $(OCAMLFLAGS) -c $<
@@ -76,9 +69,6 @@ $(BENCHMARK_TARGET): $(CMIS) $(CMOS) $(BENCHMARK_OBJ)
 run: $(TARGET)
 	./$(TARGET)
 
-run-benchmark: $(BENCHMARK_TARGET)
-	./$(BENCHMARK_TARGET)
-
 clean:
-	rm -f *.cm[iox] *.o $(TARGET) $(BENCHMARK_TARGET)
-	find . -type f \( -name "*.cmo" -o -name "*.cmi" -o -name "*.o" -o -name "*.exe" -o -name "*.csv" -o -name "*.json" \) -exec rm -f {} +
+	rm -f *.cm[iox] *.o $(TARGET)
+	find . -type f \( -name "*.cmo" -o -name "*.cmi" -o -name "*.o" -o -name "*.exe" -o -name "*.csv" -o -name "*test*.json" \) -exec rm -f {} +
