@@ -12,6 +12,8 @@ open Lib_utils
 
 module type LIB =
 sig
+    val load_from_csv : string -> Dataframe.t
+    val load_from_json : string -> Dataframe.t
     val show_df : ?limit:int -> Dataframe.t -> unit
     val map : (data_object -> data_object) -> string -> Dataframe.t -> Dataframe.t
     val filter : (data_object -> bool) -> string -> Dataframe.t -> Dataframe.t
@@ -27,6 +29,12 @@ end
 
 module Lib : LIB = 
 struct
+
+    let load_from_csv filepath =
+        Dataframe.load_from_csv filepath
+
+    let load_from_json filepath =
+        Dataframe.load_from_json filepath
 
     let show_df ?(limit = 10) df =
         let display_rows = df.rows () |> Seq.take limit |> List.of_seq in
@@ -97,24 +105,20 @@ struct
     let mem col_name el df = 
         let col_idx = Dataframe.get_column_index df col_name in
         let row_seq = df.rows () in
-        let rec check s = match s () with
-            | Seq.Nil -> false
-            | Seq.Cons(row, t) -> if (List.nth row col_idx) = el then true else check t
-        in check row_seq
+
+        Operations.mem el row_seq col_idx
 
     let fold_left col_name f init df = 
         let col_idx = Dataframe.get_column_index df col_name in
-        let rec aux acc s = match s () with
-            | Seq.Nil -> acc
-            | Seq.Cons(row, t) -> aux (f acc (List.nth row col_idx)) t
-        in aux init (df.rows ())
+        let new_f a b = f a (List.nth b col_idx) in
+        
+        Operations.fold_left new_f init (df.rows ())
 
     let fold_right col_name f init df = 
         let col_idx = Dataframe.get_column_index df col_name in
-        let rec aux s = match s () with
-            | Seq.Nil -> init
-            | Seq.Cons(row, t) -> f (List.nth row col_idx) (aux t)
-        in aux (df.rows ())
+        let new_f a b = f (List.nth a col_idx) b in
+
+        Operations.fold_right new_f (df.rows()) init
 
     let apply_column_transformation transform_func col_name target_type df =
         let col_idx = Dataframe.get_column_index df col_name in

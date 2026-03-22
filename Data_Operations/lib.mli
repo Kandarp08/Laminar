@@ -13,6 +13,12 @@ open Lib_utils
 module type LIB =
 sig
 
+    (* Load CSV file *)
+    val load_from_csv : string -> Dataframe.t
+    
+    (* Load JSON file*)
+    val load_from_json : string -> Dataframe.t
+
     (* Display the dataframe *)
     val show_df : ?limit:int -> Dataframe.t -> unit
     

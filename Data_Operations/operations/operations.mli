@@ -15,7 +15,7 @@ sig
     val fold_right: ('a -> 'b -> 'b) -> 'a Seq.t -> 'b -> 'b
 
     (* Find whether an element exists in a sequence or not *)
-    val mem : 'a -> 'a Seq.t -> bool
+    val mem : 'a -> 'a list Seq.t -> int -> bool
 end
 
 module Operations : OPERATIONS

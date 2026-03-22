@@ -36,7 +36,7 @@ let create_test_df () =
     let oc = open_out csv_path in
     output_string oc csv_content;
     close_out oc;
-    Dataframe.load_from_csv csv_path
+    Lib.load_from_csv csv_path
 
 
 let create_test_df2 () =
@@ -45,7 +45,7 @@ let create_test_df2 () =
     let oc = open_out csv_path in
     output_string oc csv_content;
     close_out oc;
-    Dataframe.load_from_csv csv_path
+    Lib.load_from_csv csv_path
 
 
 (* Helper function to generate a test JSON dataframe *)
@@ -67,7 +67,7 @@ let create_test_json_df () =
     let oc = open_out json_path in
     output_string oc json_content;
     close_out oc;
-    Dataframe.load_from_json json_path
+    Lib.load_from_json json_path
 
 (* Run a test and print the result *)
 let run_test name test_func =
@@ -124,7 +124,7 @@ let test_get_column () =
 let test_to_csv () =
     let df = create_test_df () in
     Dataframe.to_csv df "output_test.csv";
-    let df2 = Dataframe.load_from_csv "output_test.csv" in
+    let df2 = Lib.load_from_csv "output_test.csv" in
     let rows1, cols1 = Dataframe.shape df in
     let rows2, cols2 = Dataframe.shape df2 in
     assert_equal rows1 rows2 "CSV export should preserve row count" &&
@@ -133,7 +133,7 @@ let test_to_csv () =
 let test_to_json () =
     let df = create_test_df () in
     Dataframe.to_json df "output_test.json";
-    let df2 = Dataframe.load_from_json "output_test.json" in
+    let df2 = Lib.load_from_json "output_test.json" in
     let rows1, cols1 = Dataframe.shape df in
     let rows2, cols2 = Dataframe.shape df2 in
     assert_equal rows1 rows2 "JSON export should preserve row count" &&
